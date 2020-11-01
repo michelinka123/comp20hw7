@@ -1,0 +1,292 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+<title>Jade Delight</title>
+<style type="text/css">
+form p, th, select, input
+{
+	font-family: "Optima";
+	font-size: 20px;
+}
+h1, h2, p
+{
+	font-family: "Optima";
+}
+
+h1
+{
+	color:green;
+}
+
+h1:hover
+{
+	color: #1Cff49;
+}
+
+body
+{
+	background-color:#A2D5D3;
+}
+
+input[type="submit"]
+{
+	color:green;
+}
+
+input[type="submit"]:hover
+{
+	color: #1Cff49;
+	background-color: #19A954;
+}
+
+</style>
+</head>
+
+<body>
+<script language="javascript">
+
+function MenuItem(name, cost)
+{
+	this.name = name;
+	this.cost=cost;
+}
+
+menuItems = new Array(
+	new MenuItem("Chicken Chop Suey", 4.5),
+	new MenuItem("Sweet and Sour Pork", 6.25),
+	new MenuItem("Shrimp Lo Mein", 5.25),
+	new MenuItem("Moo Shi Chicken", 6.5),
+	new MenuItem("Fried Rice", 2.35)
+);
+
+function makeSelect(name, minRange, maxRange)
+{
+	var t= "";
+	t = "<select name='" + name + "' size='1'>";
+	for (j=minRange; j<=maxRange; j++)
+	   t += "<option>" + j + "</option>";
+	t+= "</select>"; 
+	return t;
+}
+</script>
+
+<h1>Jade Delight</h1>
+<form>
+
+<p>First Name: <input type="text"  name='fname' /></p>
+<p>Last Name*:  <input type="text"  name='lname' /></p>
+<p>Street: <input type="text"  name='street' /></p>
+<p>City: <input type="text"  name='city' /></p>
+<p>Phone*: <input type="text"  name='phone' /></p>
+<p> 
+	<input type="radio"  name="p_or_d" value = "pickup" checked="checked"/>Pickup  
+	<input type="radio"  name='p_or_d' value = 'delivery'/>
+	Delivery
+</p>
+<table border="0" cellpadding="3">
+  <tr>
+    <th>Select Item</th>
+    <th>Item Name</th>
+    <th>Cost Each</th>
+    <th>Total Cost</th>
+  </tr>
+<script language="javascript">
+
+  var s = "";
+  for (i=0; i< menuItems.length; i++)
+  {
+	  s += "<tr><td>";
+	  s += makeSelect("quan" + i, 0, 10);
+	  s += "</td><td>" + menuItems[i].name + "</td>";
+	  s += "<td> $ " + menuItems[i].cost.toFixed(2) + "</td>";
+	  s += "<td>$<input type='text' name='cost'/></td></tr>";
+  }
+  document.writeln(s);
+</script>
+</table>
+<p>Subtotal: 
+   $<input type="text"  name='subtotal' id="subtotal" />
+</p>
+<p>Mass tax 6.25%:
+  $ <input type="text"  name='tax' id="tax" />
+</p>
+<p>Total: $ <input type="text"  name='total' id="total" />
+</p>
+
+<input type = "submit" value = "Submit Order"/>
+
+</form>
+
+<script language="javascript">
+
+	//this function builds and returns a string displaying the user's order
+	//(this includes quantity, name, and total cost for each menu item)
+	function generateOrderText()
+	{
+		//start with empty string
+		var orderText = "";
+		var i;
+
+		//loop over each possible quantity in drop down
+		for (i=0; i < 5; i+=1)
+		{
+			var ele = $("select[name='quan" + i.toString() + "']");
+			if(ele.val() != 0)
+			{
+				orderText += "<p>" + ele.val().toString() + " of " + menuItems[i].name + ": " + (ele.val()*menuItems[i].cost).toFixed(2) + "</p>";
+			}
+		}
+		return(orderText);
+	}
+
+	function AutoFill()
+	{
+		var i;
+		var subtotal = 0;
+		var tax = 0;
+		var total = 0;
+		for (i=0; i < 5; i++)
+		{
+			var ele = $("select[name='quan" + i.toString() + "']");
+			var numSelected = ele.val();
+			if(numSelected != 0)
+			{
+                var totalCost = (menuItems[i].cost * numSelected);
+				document.getElementsByName("cost")[i].value = totalCost.toFixed(2);
+                // alert(document.getElementsByName("cost")[i].value);
+                subtotal = subtotal + totalCost;
+                document.getElementById("subtotal").value = subtotal.toFixed(2);
+			}
+			tax = subtotal * 0.625;
+			document.getElementById("tax").value = tax.toFixed(2);
+			total = subtotal + tax;
+			document.getElementById("total").value = total.toFixed(2);
+		}
+	}
+
+	// //testing
+	// AutoFill();
+
+	
+	window.onload=function()
+	{
+		//since default is pickup, default is hidden street/city fields
+		$("input[name='street']").hide();
+		$("input[name='city']").hide();
+	}
+		//street and city fields hidden but appear when user selects delivery
+		$('input:radio[name="p_or_d"]').change(function()
+		{
+			if($(this).is(':checked') && $(this).val() == 'pickup')
+			{
+				$("input[name='street']").hide();
+				$("input[name='city']").hide();
+			}
+			else
+			{
+				$("input[name='street']").show();
+				$("input[name='city']").show();
+			}
+
+		});
+	
+		$('select[name^="quan"]').change(AutoFill);
+		
+	$(document).ready(function()
+	{
+		//identify & calculate # of errors
+		$("input[value='Submit Order']").click(function()
+		{
+			var errors = "Errors detected: ";
+			var counter = 0;
+			var date = new Date();
+			var hour;
+			var min;
+
+			//check that last name is entered
+			if($("input[name='lname']").val() === '')
+			{
+				counter++;
+				errors = errors.concat("\n" + counter + ". Please enter a last name.");
+			}
+
+			//check for 10-digit phone number
+			if($("input[name='phone']").val().length != 10)
+			{
+				counter++;
+				errors = errors.concat("\n" + counter + ". Please enter a valid phone number.");
+			}
+
+			//if user chooses delivery, check that street & city fields are filled in
+			if($("input:radio[name='p_or_d']")[1].checked)
+			{
+				order = 'delivery';
+				if($("input[name='street']").val() === '')
+				{
+					counter++;
+					errors = errors.concat("\n" + counter + ". Please enter a street name.");
+				}
+				if($("input[name='city']").val() === '')
+				{
+					counter++;
+					errors = errors.concat("\n" + counter + ". Please enter a city name.");
+				}
+
+			}
+
+
+			//calculate delivery time
+			if(counter==0)
+			{
+				//if user chooses delivery add 30 min to current time
+				if($("input:radio[name='p_or_d']")[1].checked)
+				{
+					date.setMinutes(date.getMinutes() + 30);
+					hour = date.getHours();
+					min = date.getMinutes();
+					if (min < 10)
+					{
+						min = "0" + min.toString();
+					}
+				}
+				else
+				{
+					//if user chooses pickup add 15 min to current time
+					date.setMinutes(date.getMinutes() + 15);
+					hour = date.getHours();
+					min = date.getMinutes();
+					if (min < 10)
+					{
+						min = "0" + min.toString();
+					}
+				}
+
+				//open a new window and generate order summary based on what user entered
+				var opened = window.open("");
+				var ordertext = generateOrderText();
+
+				//alert(ordertext);
+				opened.document.write(
+					"<html><head><title>Order Summary</title><style>h1, h2, p{font-family:Optima;}p{font-size:20px}h1{color:green} h1:hover {color: #1Cff49;}</style></head><body><h1> Thank you for your order!</h1><br><h2>Your order:</h2><br>" + ordertext + "<br> " + "<p> Your subtotal is: $" + document.getElementById("subtotal").value + "<br> Mass Tax 6.25%: $" + document.getElementById("tax").value + "<br> Total price: $" + document.getElementById("total").value + "<p><br>" + "<h2>Your order will be ready at " + hour + ":" + min + ". Enjoy and have a great day!</h2></body></html>");
+			}
+			else
+			{
+				alert(errors);
+			}
+
+		})
+	});
+
+//preventing automatic refresh
+$('form').on('submit', function(event) 
+{
+   event.preventDefault();
+   return false;
+});
+</script>
+
+</body>
+</html>
